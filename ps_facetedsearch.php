@@ -151,6 +151,9 @@ class Ps_Facetedsearch extends Module implements WidgetInterface
             'layered_selection_stock' => [
                 'label' => 'Product stock filter',
             ],
+            'layered_selection_stockdwa' => [
+                'label' => 'Product stockdwa filter',
+            ],
             'layered_selection_condition' => [
                 'label' => 'Product condition filter',
             ],
@@ -1146,6 +1149,8 @@ VALUES(' . $last_id . ', ' . (int) $idShop . ')');
 
                             if ($key == 'layered_selection_stock') {
                                 $sqlInsert .= '(' . (int) $idCategory . ', ' . (int) $idShop . ', NULL,\'quantity\',' . (int) $n . ', ' . (int) $limit . ', ' . (int) $type . '),';
+                            } elseif ($key == 'layered_selection_stockdwa') {
+                                $sqlInsert .= '(' . (int) $idCategory . ', ' . (int) $idShop . ', NULL,\'quantitydwa\',' . (int) $n . ', ' . (int) $limit . ', ' . (int) $type . '),';
                             } elseif ($key == 'layered_selection_subcategories') {
                                 $sqlInsert .= '(' . (int) $idCategory . ', ' . (int) $idShop . ', NULL,\'category\',' . (int) $n . ', ' . (int) $limit . ', ' . (int) $type . '),';
                             } elseif ($key == 'layered_selection_condition') {

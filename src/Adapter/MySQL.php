@@ -111,10 +111,22 @@ class MySQL extends AbstractAdapter
 
         $query .= implode(', ', $selectFields) . ' FROM ' . $referenceTable . ' p';
 
-        foreach ($joinConditions as $joinAliasInfos) {
-            foreach ($joinAliasInfos as $tableAlias => $joinInfos) {
-                $query .= ' ' . $joinInfos['joinType'] . ' ' . _DB_PREFIX_ . $joinInfos['tableName'] . ' ' .
-                       $tableAlias . ' ON ' . $joinInfos['joinCondition'];
+        if (strpos(implode(' AND ', $whereConditions), 'pac.id_attribute') !== false)
+        {
+            foreach ($joinConditions as $joinAliasInfos) {
+                 foreach ($joinAliasInfos as $tableAlias => $joinInfos) {
+                     $query .= ' ' . $joinInfos['joinType'] . ' ' . _DB_PREFIX_ . $joinInfos['tableName'] . ' ' .
+                            $tableAlias . ' ON ' .  str_replace("domyslny.id_product = pa.id_product","domyslny.id_product_attribute = pac.id_product_attribute",str_replace("zam.id_product = pa.id_product","zam.id_product_attribute = pac.id_product_attribute",str_replace("datedos.id_product = pa.id_product","datedos.id_product_attribute = pac.id_product_attribute",str_replace("kodzik.id_product = pa.id_product","kodzik.id_product_attribute = pac.id_product_attribute",$joinInfos['joinCondition']))));
+                 }
+            }
+        }
+        else
+        {
+            foreach ($joinConditions as $joinAliasInfos) {
+                foreach ($joinAliasInfos as $tableAlias => $joinInfos) {
+                    $query .= ' ' . $joinInfos['joinType'] . ' ' . _DB_PREFIX_ . $joinInfos['tableName'] . ' ' .
+                           $tableAlias . ' ON ' . $joinInfos['joinCondition'];
+                }
             }
         }
 
@@ -127,12 +139,19 @@ class MySQL extends AbstractAdapter
         }
 
         if ($orderField) {
-            $query .= ' ORDER BY ' . $orderField . ' ' . strtoupper($this->getOrderDirection());
+            $query .= ' ORDER BY  ' . str_replace("datedos.available_date","CASE WHEN p.reference LIKE '%MOTOPARK' then 6 WHEN indeksproduktu LIKE '%MOTOPARK' then 5 WHEN indeksproduktuzam LIKE '%ZAM' then 4 WHEN datadostepnosci then 3 WHEN domyslnakombinacja > 0 then 2 WHEN p.id_product then 1 END",$orderField) . ' ' . strtoupper($this->getOrderDirection());
+            //$query .= ' ORDER BY  ' . str_replace("datedos.available_date","CASE WHEN indeksproduktu LIKE '%MOTOPARK' then 1 WHEN p.reference LIKE '%MOTOPARK' then 2 else REPLACE(IFNULL(datadostepnosci, '2066-12-12'),'0000-00-00','2066-12-12') END",$orderField) . ' ' . strtoupper($this->getOrderDirection());
+            //str_replace("datedos.available_date","REPLACE(IFNULL(datedos.available_date, '2066-12-12'),'0000-00-00','2066-12-12')",$orderField)
         }
 
         if ($this->limit !== null) {
             $query .= ' LIMIT ' . $this->offset . ', ' . $this->limit;
         }
+
+        //Something to write to txt log
+        //$log  = $query;
+        //Save string to log, use FILE_APPEND to append.
+        //file_put_contents('./log_'.date("j.n.Y").'.log', $log, FILE_APPEND);
 
         return $query;
     }
@@ -297,6 +316,119 @@ class MySQL extends AbstractAdapter
                 'fieldAlias' => 'sales',
                 'joinCondition' => '(psales.id_product = p.id_product)',
                 'joinType' => self::LEFT_JOIN,
+            ],
+            'stan24h' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'stan24',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.reference LIKE \'%MOTOPARK\' OR p.reference LIKE \'%MOTOPARK\'' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+            ],
+            'stanzamowienia' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'stanzamowienia',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.available_date > \'2020-09-01\'' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+             ],
+             'stanzamowienia714' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'stanzamowienia714',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.quantity > 0 AND pa.reference NOT LIKE \'%MOTOPARK\'' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+             ],
+             'stanzamowieniaczesci' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'stanzamowieniaczesci',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product IN (SELECT id_product FROM ps_product_lang WHERE available_later LIKE \'Przewidywana data dostawy - %-%-%\')' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+             ],
+             'stanzamowienia714czesci' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'stanzamowienia714czesci',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product IN (SELECT id_product FROM ps_product WHERE reference NOT LIKE \'%MOTOPARK\') AND sa.id_product IN (SELECT id_product FROM ps_product_lang WHERE available_now NOT LIKE \'%wysyłka w 24h\')' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+             ],
+             'stan24hczesci' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'stan24czesci',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product IN (SELECT A.id_product FROM ps_product A LEFT OUTER JOIN `ps_product_lang` B ON A.id_product = B.id_product WHERE A.reference LIKE \'%MOTOPARK\' OR B.available_now LIKE \'%wysyłka w 24h\')' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+            ],
+            'niedostepneczesci' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'niedostepneczesci',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product IN (SELECT id_product FROM ps_product_lang WHERE available_later LIKE \'niedostępny\')' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+            ],
+            'datadostepnosci' => [
+                'tableName' => 'product_attribute',
+                'tableAlias' => 'datedos',
+                'fieldName' => 'available_date',
+                'fieldAlias' => 'datadostepnosci',
+                'joinCondition' => '(datedos.id_product = pa.id_product and datedos.available_date LIKE \'202%\')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
+            ],
+            'indeksproduktu' => [
+                'tableName' => 'product_attribute',
+                'tableAlias' => 'kodzik',
+                'fieldName' => 'reference',
+                'fieldAlias' => 'indeksproduktu',
+                'joinCondition' => '(kodzik.id_product = pa.id_product and kodzik.reference like \'%motopark\')',
+                'joinType' => self::LEFT_JOIN,
+            ],
+            'indeksproduktuzam' => [
+                'tableName' => 'product_attribute',
+                'tableAlias' => 'zam',
+                'fieldName' => 'reference',
+                'fieldAlias' => 'indeksproduktuzam',
+                'joinCondition' => '(zam.id_product = pa.id_product and zam.reference like \'%ZAM\')',
+                'joinType' => self::LEFT_JOIN,
+            ],
+            'domyslnakombinacja' => [
+                'tableName' => 'product_attribute',
+                'tableAlias' => 'domyslny',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'domyslnakombinacja',
+                'joinCondition' => '(domyslny.id_product = pa.id_product and domyslny.quantity > \'0\')',
+                'joinType' => self::LEFT_JOIN,
+            ],
+            'zamowione' => [
+                'tableName' => 'stock_available',
+                'tableAlias' => 'sa',
+                'fieldName' => 'quantity',
+                'fieldAlias' => 'zamowione',
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.reference LIKE \'%ZAM\'' .
+                $stockCondition . ')',
+                'joinType' => self::LEFT_JOIN,
+                'dependencyField' => 'id_attribute',
             ],
         ];
 
@@ -742,12 +874,17 @@ class MySQL extends AbstractAdapter
         $this->setSelectFields(
             [
                 'id_product',
+                'reference',
                 'id_manufacturer',
                 'quantity',
                 'condition',
                 'weight',
                 'price',
                 'sales',
+                'datadostepnosci',
+                'indeksproduktu',
+                'indeksproduktuzam',
+                'domyslnakombinacja',
             ]
         );
         $this->initialPopulation = clone $this;

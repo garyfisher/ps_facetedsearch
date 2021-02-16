@@ -113,6 +113,37 @@
               <li class="filter_list_item row" draggable="true">
                 <div class="col-lg-2">
                   <label class="switch-light prestashop-switch fixed-width-lg">
+                    <input name="layered_selection_stockdwa" id="layered_selection_stockdwa" type="checkbox" />
+                    <span>
+                      <span>{l s='Yes' d='Admin.Global'}</span>
+                      <span>{l s='No' d='Admin.Global'}</span>
+                    </span>
+                    <a class="slide-button btn"></a>
+                  </label>
+                </div>
+                <div class="col-lg-4">
+                  <span class="module_name">{l s='Product stockdwa filter' d='Modules.Facetedsearch.Admin'}</span>
+                </div>
+                <div class="col-lg-3 pull-right">
+                  <label class="control-label col-lg-6">{l s='Filter result limit:' d='Modules.Facetedsearch.Admin'}</label>
+                  <div class="col-lg-6">
+                    {call get_limit_select element="layered_selection_stockdwa"}
+                  </div>
+                </div>
+                <div class="col-lg-3 pull-right">
+                  <label class="control-label col-lg-6">{l s='Filter style:' d='Modules.Facetedsearch.Admin'}</label>
+                  <div class="col-lg-6">
+                    <select name="layered_selection_stockdwa_filter_type">
+                      <option value="0">{l s='Checkbox' d='Modules.Facetedsearch.Admin'}</option>
+                      <option value="1">{l s='Radio button' d='Modules.Facetedsearch.Admin'}</option>
+                      <option value="2">{l s='Drop-down list' d='Modules.Facetedsearch.Admin'}</option>
+                    </select>
+                  </div>
+                </div>
+              </li>
+              <li class="filter_list_item row" draggable="true">
+                <div class="col-lg-2">
+                  <label class="switch-light prestashop-switch fixed-width-lg">
                     <input name="layered_selection_condition" id="layered_selection_condition" type="checkbox" />
                     <span>
                       <span>{l s='Yes' d='Admin.Global'}</span>

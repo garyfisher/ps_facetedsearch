@@ -171,7 +171,7 @@ class Search
                     }
 
                     $operationsFilter = [];
-                    if ($filterValues[0]) {
+                    if ($filterValues[0] == 1) {
                         // Filter for available quantity, we must be able to request
                         // product with out_of_stock at 1 or 2
                         // which mean we can buy out of stock products
@@ -182,7 +182,40 @@ class Search
                         $operationsFilter[] = [
                             ['quantity', [0], '>'],
                         ];
-                    } else {
+                    }
+                    else if ($filterValues[0] === 666) {
+                        $operationsFilter[] = [
+                             ['stan24h', [1], '>='],
+                        ];
+                        $operationsFilter[] = [
+                               ['stan24h', [1], '>'],
+                        ];
+                    }
+                    else if ($filterValues[0] === 775) {
+                        $operationsFilter[] = [
+                             ['zamowione', [0], '='],
+                        ];
+                        $operationsFilter[] = [
+                             ['zamowione', [0], '='],
+                        ];
+                    }
+                    else if ($filterValues[0] === 3) {
+                        $operationsFilter[] = [
+                             ['stanzamowienia', [0], '='],
+                        ];
+                        $operationsFilter[] = [
+                               ['stanzamowienia', [0], '='],
+                        ];
+                    }
+                    else if ($filterValues[0] === 4) {
+                        $operationsFilter[] = [
+                             ['stanzamowienia714', [4], '>='],
+                        ];
+                        $operationsFilter[] = [
+                               ['stanzamowienia714', [4], '>'],
+                        ];
+                    }
+                    else {
                         $operationsFilter[] = [
                             ['quantity', [0], '<='],
                             ['out_of_stock', !$this->psOrderOutOfStock ? [0, 2] : [0], '='],
@@ -194,7 +227,65 @@ class Search
                         $operationsFilter
                     );
                     break;
+                case 'quantitydwa':
+                    if (count($selectedFilters['quantitydwa']) == 2) {
+                        break;
+                    }
 
+                    if (!$this->psStockManagement) {
+                        $this->getSearchAdapter()->addFilter('quantity', [0], (!$filterValues[0] ? '<=' : '>'));
+                        break;
+                    }
+
+                    $operationsFilter = [];
+                    if ($filterValues[0] == 1) {
+                        // Filter for available quantity, we must be able to request
+                        // product with out_of_stock at 1 or 2
+                        // which mean we can buy out of stock products
+                        $operationsFilter[] = [
+                            ['quantity', [0], '>='],
+                            ['out_of_stock', [1], $this->psOrderOutOfStock ? '>=' : '='],
+                        ];
+                        $operationsFilter[] = [
+                            ['quantity', [0], '>'],
+                        ];
+                    }
+                    else if ($filterValues[0] === 667) {
+                        $operationsFilter[] = [
+                             ['stanzamowieniaczesci', [0], '='],
+                        ];
+                        $operationsFilter[] = [
+                             ['stanzamowieniaczesci', [0], '='],
+                        ];
+                    }
+                    else if ($filterValues[0] === 668) {
+                        $operationsFilter[] = [
+                             ['stanzamowienia714czesci', [4], '>='],
+                        ];
+                        $operationsFilter[] = [
+                             ['stanzamowienia714czesci', [4], '>'],
+                        ];
+                    }
+                    else if ($filterValues[0] === 669) {
+                        $operationsFilter[] = [
+                             ['stan24hczesci', [1], '>='],
+                        ];
+                        $operationsFilter[] = [
+                             ['stan24hczesci', [1], '>'],
+                        ];
+                    }
+                    else {
+                        $operationsFilter[] = [
+                            ['niedostepneczesci', [0], '<='],
+                        //    ['out_of_stock', !$this->psOrderOutOfStock ? [0, 2] : [0], '='],
+                        ];
+                    }
+
+                    $this->getSearchAdapter()->addOperationsFilter(
+                        self::STOCK_MANAGEMENT_FILTER,
+                        $operationsFilter
+                    );
+                    break;
                 case 'manufacturer':
                     $this->addFilter('id_manufacturer', $filterValues);
                     break;

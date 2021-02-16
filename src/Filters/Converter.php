@@ -47,6 +47,7 @@ class Converter
     const TYPE_CONDITION = 'condition';
     const TYPE_FEATURE = 'id_feature';
     const TYPE_QUANTITY = 'quantity';
+    const TYPE_QUANTITYDWA = 'quantitydwa';
     const TYPE_MANUFACTURER = 'manufacturer';
     const TYPE_PRICE = 'price';
     const TYPE_WEIGHT = 'weight';
@@ -99,12 +100,17 @@ class Converter
                 case self::TYPE_CONDITION:
                 case self::TYPE_MANUFACTURER:
                 case self::TYPE_QUANTITY:
+                case self::TYPE_QUANTITYDWA:
                 case self::TYPE_ATTRIBUTE_GROUP:
                 case self::TYPE_FEATURE:
                     $type = $filterBlock['type'];
                     if ($filterBlock['type'] === self::TYPE_QUANTITY) {
                         $type = 'availability';
-                    } elseif ($filterBlock['type'] == self::TYPE_ATTRIBUTE_GROUP) {
+                    }
+                       elseif ($filterBlock['type'] === self::TYPE_QUANTITYDWA) {
+                        $type = 'availabilitydwa';
+                    }
+                      elseif ($filterBlock['type'] == self::TYPE_ATTRIBUTE_GROUP) {
                         $type = 'attribute_group';
                         $facet->setProperty(self::TYPE_ATTRIBUTE_GROUP, $filterBlock['id_key']);
                     } elseif ($filterBlock['type'] == self::TYPE_FEATURE) {
@@ -257,10 +263,71 @@ class Converter
                             'Modules.Facetedsearch.Shop'
                         ) => 0,
                         $this->context->getTranslator()->trans(
-                            'In stock',
+                            'Dostępne',
                             [],
                             'Modules.Facetedsearch.Shop'
                         ) => 1,
+                        $this->context->getTranslator()->trans(
+                            'Wysyłka w 24h',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 666,
+                        $this->context->getTranslator()->trans(
+                            'Zamowione',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 775,
+                        $this->context->getTranslator()->trans(
+                            'Na zamówienie X dni',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 3,
+                        $this->context->getTranslator()->trans(
+                            'Na zamówienie 7 dni',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 4,
+                    ];
+
+                    $searchFilters[$filter['type']] = [];
+                    foreach ($quantityArray as $quantityName => $quantityId) {
+                        if (isset($facetAndFiltersLabels[$filterLabel]) && in_array($quantityName, $facetAndFiltersLabels[$filterLabel])) {
+                            $searchFilters[$filter['type']][] = $quantityId;
+                        }
+                    }
+                    break;
+                case self::TYPE_QUANTITYDWA:
+                    if (!isset($facetAndFiltersLabels[$filterLabel])) {
+                        // No need to filter if no information
+                        continue 2;
+                    }
+
+                    $quantityArray = [
+                        $this->context->getTranslator()->trans(
+                            'Not available',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 0,
+                        $this->context->getTranslator()->trans(
+                            'Dostępne',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 1,
+                        $this->context->getTranslator()->trans(
+                            'Na zamówienie X dni',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 667,
+                        $this->context->getTranslator()->trans(
+                            'Na zamówienie 7 dni',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 668,
+                        $this->context->getTranslator()->trans(
+                            'Wysyłka w 24h',
+                            [],
+                            'Modules.Facetedsearch.Shop'
+                        ) => 669,
                     ];
 
                     $searchFilters[$filter['type']] = [];
@@ -400,6 +467,8 @@ class Converter
             case self::TYPE_CONDITION:
                 return $this->context->getTranslator()->trans('Condition', [], 'Modules.Facetedsearch.Shop');
             case self::TYPE_QUANTITY:
+                return $this->context->getTranslator()->trans('Availability', [], 'Modules.Facetedsearch.Shop');
+            case self::TYPE_QUANTITYDWA:
                 return $this->context->getTranslator()->trans('Availability', [], 'Modules.Facetedsearch.Shop');
             case self::TYPE_MANUFACTURER:
                 return $this->context->getTranslator()->trans('Brand', [], 'Modules.Facetedsearch.Shop');

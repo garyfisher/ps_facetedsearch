@@ -126,6 +126,9 @@ class Block
                 case 'quantity':
                     $filterBlocks[] = $this->getQuantitiesBlock($filter, $selectedFilters);
                     break;
+                case 'quantitydwa':
+                    $filterBlocks[] = $this->getQuantitiesBlockdwa($filter, $selectedFilters);
+                    break;
                 case 'manufacturer':
                     $filterBlocks[] = $this->getManufacturersBlock($filter, $selectedFilters, $idLang);
                     break;
@@ -316,6 +319,8 @@ class Block
      * @param int $priceMinFilter
      * @param int $priceMaxFilter
      * @param int $weightFilter
+     *
+     * @return array
      */
     private function restorePriceAndWeightFilters(
         $filteredSearchAdapter,
@@ -448,9 +453,10 @@ class Block
      *
      * @return array
      */
-    private function getQuantitiesBlock($filter, $selectedFilters)
+    private function getQuantitiesBlockdwa($filter, $selectedFilters)
     {
         $filteredSearchAdapter = $this->searchAdapter->getFilteredSearchAdapter(Search::STOCK_MANAGEMENT_FILTER);
+
         $quantityArray = [
             0 => [
                 'name' => $this->context->getTranslator()->trans(
@@ -462,7 +468,200 @@ class Block
             ],
             1 => [
                 'name' => $this->context->getTranslator()->trans(
-                    'In stock',
+                    'Dostępny',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            667 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Na zamówienie X dni',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            668 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Na zamówienie 7 dni',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            669 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Wysyłka w 24h',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+        ];
+
+        if ($this->psStockManagement === null) {
+            $this->psStockManagement = (bool) Configuration::get('PS_STOCK_MANAGEMENT');
+        }
+
+        if ($this->psOrderOutOfStock === null) {
+            $this->psOrderOutOfStock = (bool) Configuration::get('PS_ORDER_OUT_OF_STOCK');
+        }
+
+        if ($this->psStockManagement) {
+            $results = [];
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['niedostepneczesci', [0], '<='],
+                        //['out_of_stock', !$this->psOrderOutOfStock ? [0, 2] : [0], '='],
+                    ],
+                    [
+                        ['niedostepneczesci', [0], '<='],
+                        //['out_of_stock', !$this->psOrderOutOfStock ? [0, 2] : [0], '='],
+                    ],
+                ]
+            );
+            $results[0] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            /*$filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['quantity', [0], '>='],
+                        ['out_of_stock', [1], $this->psOrderOutOfStock ? '>=' : '='],
+                    ],
+                    [
+                        ['quantity', [0], '>'],
+                    ],
+                ]
+            );
+            $results[1] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];*/
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stanzamowieniaczesci', [0], '='],
+                    ],
+                    [
+                        ['stanzamowieniaczesci', [0], '='],
+                    ],
+                ]
+            );
+
+            $results[667] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stanzamowienia714czesci', [4], '>='],
+                    ],
+                    [
+                        ['stanzamowienia714czesci', [4], '>'],
+                    ],
+                ]
+            );
+
+            $results[668] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stan24hczesci', [1], '>='],
+                    ],
+                    [
+                        ['stan24hczesci', [1], '>='],
+                    ],
+                ]
+            );
+
+            $results[669] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            foreach ($results as $key => $values) {
+                $count = $values['c'];
+
+                $quantityArray[$key]['nbr'] = $count;
+                if (isset($selectedFilters['quantitydwa']) && in_array($key, $selectedFilters['quantitydwa'], true)) {
+                    $quantityArray[$key]['checked'] = true;
+                }
+            }
+        }
+
+        $quantityBlockdwa = [
+            'type_lite' => 'quantity',
+            'type' => 'quantity',
+            'id_key' => 0,
+            'name' => $this->context->getTranslator()->trans('Availability', [], 'Modules.Facetedsearch.Shop'),
+            'values' => $quantityArray,
+            'filter_show_limit' => (int) $filter['filter_show_limit'],
+            'filter_type' => $filter['filter_type'],
+        ];
+
+        return $quantityBlockdwa;
+    }
+
+    private function getQuantitiesBlock($filter, $selectedFilters)
+    {
+        $filteredSearchAdapter = $this->searchAdapter->getFilteredSearchAdapter(Search::STOCK_MANAGEMENT_FILTER);
+
+        $quantityArray = [
+            0 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Not available',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            666 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Wysyłka w 24h',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            775 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Zamowione',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            1 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Dostępny',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            3 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Na zamówienie X dni',
+                    [],
+                    'Modules.Facetedsearch.Shop'
+                ),
+                'nbr' => 0,
+            ],
+            4 => [
+                'name' => $this->context->getTranslator()->trans(
+                    'Na zamówienie 7 dni',
                     [],
                     'Modules.Facetedsearch.Shop'
                 ),
@@ -493,7 +692,7 @@ class Block
                 'c' => $filteredSearchAdapter->count(),
             ];
 
-            $filteredSearchAdapter->addOperationsFilter(
+            /*$filteredSearchAdapter->addOperationsFilter(
                 Search::STOCK_MANAGEMENT_FILTER,
                 [
                     [
@@ -507,7 +706,83 @@ class Block
             );
             $results[1] = [
                 'c' => $filteredSearchAdapter->count(),
+            ];*/
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stan24h', [1], '>='],
+                    ],
+                    [
+                        ['stan24h', [1], '>='],
+                    ],
+                ]
+            );
+
+            $results[666] = [
+                'c' => $filteredSearchAdapter->count(),
             ];
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['zamowione', [0], '>='],
+                    ],
+                    [
+                        ['zamowione', [0], '>='],
+                    ],
+                ]
+            );
+
+            $results[775] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stanzamowienia', [0], '='],
+                    ],
+                    [
+                        ['stanzamowienia', [0], '='],
+                    ],
+                ]
+            );
+
+            $results[3] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stanzamowienia714', [4], '>='],
+                    ],
+                    [
+                        ['stanzamowienia714', [4], '>'],
+                    ],
+                ]
+            );
+
+            $results[4] = [
+                'c' => $filteredSearchAdapter->count(),
+            ];
+
+            $filteredSearchAdapter->addOperationsFilter(
+                Search::STOCK_MANAGEMENT_FILTER,
+                [
+                    [
+                        ['stanzamowieniaczesci', [0], '='],
+                    ],
+                    [
+                        ['stanzamowieniaczesci', [0], '='],
+                    ],
+                ]
+            );
 
             foreach ($results as $key => $values) {
                 $count = $values['c'];

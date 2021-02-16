@@ -74,20 +74,23 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
     private function getAvailableSortOrders()
     {
         $sortSalesDesc = new SortOrder('product', 'sales', 'desc');
-        $sortPosAsc = new SortOrder('product', 'position', 'asc');
+        //$sortPosAsc = new SortOrder('product', 'position', 'asc');
         $sortNameAsc = new SortOrder('product', 'name', 'asc');
         $sortNameDesc = new SortOrder('product', 'name', 'desc');
         $sortPriceAsc = new SortOrder('product', 'price', 'asc');
         $sortPriceDesc = new SortOrder('product', 'price', 'desc');
+        $sortDateAsc = new SortOrder('product', 'datadostepnosci', 'desc');
+        //$sortNameDesc = new SortOrder('product', 'datadostepnosci', 'asc');
+        //$sortDateDesc = new SortOrder('product', 'available_datenow', 'desc');
         $translator = $this->module->getTranslator();
 
         return [
             $sortSalesDesc->setLabel(
                 $translator->trans('Best sellers', [], 'Modules.Facetedsearch.Shop')
             ),
-            $sortPosAsc->setLabel(
-                $translator->trans('Relevance', [], 'Modules.Facetedsearch.Shop')
-            ),
+            //$sortPosAsc->setLabel(
+            //    $translator->trans('Relevance', [], 'Modules.Facetedsearch.Shop')
+            //),
             $sortNameAsc->setLabel(
                 $translator->trans('Name, A to Z', [], 'Shop.Theme.Catalog')
             ),
@@ -100,6 +103,12 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
             $sortPriceDesc->setLabel(
                 $translator->trans('Price, high to low', [], 'Shop.Theme.Catalog')
             ),
+            $sortDateAsc->setLabel(
+                $translator->trans('Data dostępności od najbliższej', [], 'Modules.Facetedsearch.Shop')
+            ),
+            //$sortDateDesc->setLabel(
+            //    $translator->trans('Data dostępności od najdłuższej', [], 'Modules.Facetedsearch.Shop')
+            //),
         ];
     }
 

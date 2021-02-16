@@ -17,7 +17,7 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  *}
 {if $displayedFacets|count}
-  <div id="search_filters">
+  <div id="search_filters" class="gitprawa">
     {block name='facets_title'}
       <p class="text-uppercase h6 hidden-sm-down">{l s='Filter By' d='Shop.Theme.Actions'}</p>
     {/block}
@@ -52,14 +52,54 @@
 
         {if in_array($facet.widgetType, ['radio', 'checkbox'])}
           {block name='facet_item_other'}
-            <ul id="facet_{$_expand_id}" class="collapse{if !$_collapse} in{/if}">
+            <script type="text/javascript">
+               $(document).ready(function(){
+                   var mq = window.matchMedia( "(max-width: 767px)" );
+                   if (mq.matches) {
+                   }
+                   else {
+                   $('.{$_expand_id}').each(function(){
+                        var max = 0;
+                        if ($(this).find('li').length >= max) {
+                              {* $(this).find('li:gt('+max+')') *}
+                              $(this).find('li').hide().end().append('<li class="sub_accordian_{$_expand_id}"><label style="text-align: center;margin-bottom: 10px;transition: 0.3s all ease 0s;background: #333;color: #ffffff;border-radius: 3px;" class="facet-label"><span class="show_more_{$_expand_id}">wybierz filtr</span></label></li>');
+                              $('li').find("input[type='checkbox']:checked").each(function () {
+                                 $(this).parents('li').show().end();
+                              });
+                              $('.sub_accordian_{$_expand_id}').click( function(){
+                                    {* $(this).siblings(':gt('+max+')').toggle(); *}
+                                    $(this).siblings('li').toggle();
+                                    if($('.show_more_{$_expand_id}').length )
+                                    {
+                                        $('li').find("input[type='checkbox']:checked").each(function ()
+                                        {
+                                           $(this).parents('li').show().end();
+                                        });
+                                        $(this).html('<label style="text-align: center;margin-bottom: 10px;transition: 0.3s all ease 0s;background: #333;color: #ffffff;border-radius: 3px;" class="facet-label"><span class="show_less_{$_expand_id}">ukryj</span></label>');
+                                        $('#search_filters')[0].scrollIntoView();
+                                    } else
+                                    {
+                                        $('li').find("input[type='checkbox']:checked").each(function ()
+                                        {
+                                           $(this).parents('li').show().end();
+                                        });
+                                        $(this).html('<label style="text-align: center;margin-bottom: 10px;transition: 0.3s all ease 0s;background: #333;color: #ffffff;border-radius: 3px;" class="facet-label"><span class="show_more_{$_expand_id}">wybierz filtr</span></label>');
+                                        $('#search_filters')[0].scrollIntoView();
+                                   };
+                              });
+                        };
+                   });
+                   }
+               });
+            </script>
+            <ul id="facet_{$_expand_id}" class="collapse{if !$_collapse} in{/if} {$_expand_id}">
               {foreach from=$facet.filters key=filter_key item="filter"}
                 {if !$filter.displayed}
                   {continue}
                 {/if}
 
                 <li>
-                  <label class="facet-label{if $filter.active} active {/if}" for="facet_input_{$_expand_id}_{$filter_key}">
+                  <label {if {$filter.label}|stristr:"Zamowione"}style="display: none;"{/if} class="facet-label{if $filter.active} active {/if}" for="facet_input_{$_expand_id}_{$filter_key}">
                     {if $facet.multipleSelectionAllowed}
                       <span class="custom-checkbox">
                         <input
