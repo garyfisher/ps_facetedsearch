@@ -47,6 +47,11 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
     private $filtersConverter;
 
     /**
+     * @var Filters\DataAccessor
+     */
+    private $dataAccessor;
+
+    /**
      * @var URLSerializer
      */
     private $urlSerializer;
@@ -60,11 +65,13 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
         Ps_Facetedsearch $module,
         Filters\Converter $converter,
         URLSerializer $serializer,
+        Filters\DataAccessor $dataAccessor,
         SearchFactory $searchFactory = null
     ) {
         $this->module = $module;
         $this->filtersConverter = $converter;
         $this->urlSerializer = $serializer;
+        $this->dataAccessor = $dataAccessor;
         $this->searchFactory = $searchFactory === null ? new SearchFactory() : $searchFactory;
     }
 
@@ -85,9 +92,9 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
         $translator = $this->module->getTranslator();
 
         return [
-            $sortSalesDesc->setLabel(
-                $translator->trans('Best sellers', [], 'Modules.Facetedsearch.Shop')
-            ),
+            //$sortSalesDesc->setLabel(
+            //    $translator->trans('Best sellers', [], 'Modules.Facetedsearch.Shop')
+            //),
             //$sortPosAsc->setLabel(
             //    $translator->trans('Relevance', [], 'Modules.Facetedsearch.Shop')
             //),
@@ -154,7 +161,8 @@ class SearchProvider implements FacetsRendererInterface, ProductSearchProviderIn
         $filterBlockSearch = new Filters\Block(
             $facetedSearch->getSearchAdapter(),
             $context,
-            $this->module->getDatabase()
+            $this->module->getDatabase(),
+            $this->dataAccessor
         );
 
         $idShop = (int) $context->shop->id;

@@ -139,8 +139,8 @@ class MySQL extends AbstractAdapter
         }
 
         if ($orderField) {
-            $query .= ' ORDER BY  ' . str_replace("datedos.available_date","CASE WHEN p.reference LIKE '%MOTOPARK' then 6 WHEN indeksproduktu LIKE '%MOTOPARK' then 5 WHEN indeksproduktuzam LIKE '%ZAM' then 4 WHEN datadostepnosci then 3 WHEN domyslnakombinacja > 0 then 2 WHEN p.id_product then 1 END",$orderField) . ' ' . strtoupper($this->getOrderDirection());
-            //$query .= ' ORDER BY  ' . str_replace("datedos.available_date","CASE WHEN indeksproduktu LIKE '%MOTOPARK' then 1 WHEN p.reference LIKE '%MOTOPARK' then 2 else REPLACE(IFNULL(datadostepnosci, '2066-12-12'),'0000-00-00','2066-12-12') END",$orderField) . ' ' . strtoupper($this->getOrderDirection());
+            $query .= ' ORDER BY  ' . str_replace("datedos.available_date","CASE WHEN p.reference LIKE '%MOTOPARK' then 6 WHEN indeksproduktu LIKE '%MOTOPARK' then 5 WHEN indeksproduktuzam LIKE '%ZAM' then 4 WHEN datadostepnosci then 3 WHEN domyslnakombinacja > 0 then 2 END",$orderField) . ' ' . strtoupper($this->getOrderDirection());
+            //$query .= ' ORDER BY  ' . str_replace("datedos.available_date","CASE WHEN indeksproduktu LIKE '%MOTOPARK' then 1 WHEN p.reference LIKE '%MOTOPARK' then 2 else REPLACE(IFNULL(datadostepnosci, '2066-12-12'),'0000-00-00','2066-12-12') END",$orderField) . ' ' . strtoupper($this->getOrderDirection()); /*WHEN p.id_product then 1*/
             //str_replace("datedos.available_date","REPLACE(IFNULL(datedos.available_date, '2066-12-12'),'0000-00-00','2066-12-12')",$orderField)
         }
 
@@ -322,7 +322,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'sa',
                 'fieldName' => 'quantity',
                 'fieldAlias' => 'stan24',
-                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.reference LIKE \'%MOTOPARK\' OR p.reference LIKE \'%MOTOPARK\'' .
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product IN (SELECT DISTINCT ps_product_attribute.id_product FROM `ps_product_attribute` LEFT JOIN ps_product ON ps_product_attribute.id_product = ps_product.id_product WHERE RIGHT(ps_product_attribute.reference, 8) = \'MOTOPARK\' OR RIGHT(ps_product.reference, 8) = \'MOTOPARK\')' .
                 $stockCondition . ')',
                 'joinType' => self::LEFT_JOIN,
                 'dependencyField' => 'id_attribute',
@@ -332,7 +332,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'sa',
                 'fieldName' => 'quantity',
                 'fieldAlias' => 'stanzamowienia',
-                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.available_date > \'2020-09-01\'' .
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product NOT IN (SELECT DISTINCT ps_product_attribute.id_product FROM `ps_product_attribute` LEFT JOIN ps_product ON ps_product_attribute.id_product = ps_product.id_product WHERE RIGHT(ps_product_attribute.reference, 8) = \'MOTOPARK\' OR RIGHT(ps_product_attribute.reference, 3) = \'ZAM\' OR RIGHT(ps_product.reference, 8) = \'MOTOPARK\') AND pa.available_date > \'2020-09-01\'' .
                 $stockCondition . ')',
                 'joinType' => self::LEFT_JOIN,
                 'dependencyField' => 'id_attribute',
@@ -342,7 +342,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'sa',
                 'fieldName' => 'quantity',
                 'fieldAlias' => 'stanzamowienia714',
-                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.quantity > 0 AND pa.reference NOT LIKE \'%MOTOPARK\'' .
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND sa.id_product IN (SELECT DISTINCT ps_product_lang.id_product FROM ps_product_lang LEFT JOIN ps_product_attribute ON ps_product_lang.id_product = ps_product_attribute.id_product WHERE ps_product_lang.available_later LIKE \'na zamówienie%\' OR /*ps_product_attribute.available_date CURDATE() - INTERVAL 1 DAY AND*/ ps_product_attribute.available_date < CURDATE() + INTERVAL 15 DAY AND RIGHT(ps_product_attribute.reference, 8) <> \'MOTOPARK\')' .
                 $stockCondition . ')',
                 'joinType' => self::LEFT_JOIN,
                 'dependencyField' => 'id_attribute',
@@ -392,7 +392,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'datedos',
                 'fieldName' => 'available_date',
                 'fieldAlias' => 'datadostepnosci',
-                'joinCondition' => '(datedos.id_product = pa.id_product and datedos.available_date LIKE \'202%\')',
+                'joinCondition' => '(datedos.id_product = pa.id_product and LEFT(datedos.available_date, 3) = \'202\')',
                 'joinType' => self::LEFT_JOIN,
                 'dependencyField' => 'id_attribute',
             ],
@@ -401,7 +401,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'kodzik',
                 'fieldName' => 'reference',
                 'fieldAlias' => 'indeksproduktu',
-                'joinCondition' => '(kodzik.id_product = pa.id_product and kodzik.reference like \'%motopark\')',
+                'joinCondition' => '(kodzik.id_product = pa.id_product and RIGHT(kodzik.reference, 8) = \'motopark\')',
                 'joinType' => self::LEFT_JOIN,
             ],
             'indeksproduktuzam' => [
@@ -409,7 +409,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'zam',
                 'fieldName' => 'reference',
                 'fieldAlias' => 'indeksproduktuzam',
-                'joinCondition' => '(zam.id_product = pa.id_product and zam.reference like \'%ZAM\')',
+                'joinCondition' => '(zam.id_product = pa.id_product and RIGHT(zam.reference, 3) = \'ZAM\')',
                 'joinType' => self::LEFT_JOIN,
             ],
             'domyslnakombinacja' => [
@@ -425,7 +425,7 @@ class MySQL extends AbstractAdapter
                 'tableAlias' => 'sa',
                 'fieldName' => 'quantity',
                 'fieldAlias' => 'zamowione',
-                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND pa.reference LIKE \'%ZAM\'' .
+                'joinCondition' => '(p.id_product = sa.id_product AND IFNULL(pac.id_product_attribute, 0) = sa.id_product_attribute AND RIGHT(pa.reference, 3) = \'ZAM\'' .
                 $stockCondition . ')',
                 'joinType' => self::LEFT_JOIN,
                 'dependencyField' => 'id_attribute',
